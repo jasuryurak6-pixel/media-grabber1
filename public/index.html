@@ -1,1 +1,235 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ayirib olish — video va audio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#11131a;
+    --ink-2:#171a24;
+    --line:#262b38;
+    --paper:#eef0f4;
+    --muted:#8b91a3;
+    --amber:#e8a33d;
+    --teal:#3ecfb0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .wrap{max-width:640px;width:100%;padding:56px 24px 80px;}
+  .eyebrow{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:14px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:40px;
+    line-height:1.08;
+    margin:0 0 12px;
+    letter-spacing:-0.01em;
+  }
+  h1 span{color:var(--amber);}
+  .sub{color:var(--muted);font-size:15px;line-height:1.5;margin:0 0 40px;max-width:480px;}
 
+  .split{
+    display:flex;
+    align-items:center;
+    gap:0;
+    margin-bottom:8px;
+  }
+  .split .node{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--line);}
+  .dot.video{background:var(--amber);}
+  .dot.audio{background:var(--teal);}
+
+  form{
+    display:flex;
+    gap:10px;
+    margin-bottom:36px;
+  }
+  input[type=text]{
+    flex:1;
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    color:var(--paper);
+    padding:16px 18px;
+    border-radius:10px;
+    font-size:15px;
+    font-family:'Inter',sans-serif;
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  input[type=text]:focus{border-color:var(--amber);}
+  input[type=text]::placeholder{color:#565c6e;}
+  button{
+    background:var(--amber);
+    color:#1b1300;
+    border:none;
+    padding:0 24px;
+    border-radius:10px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    transition:transform .1s ease, opacity .15s ease;
+  }
+  button:hover{opacity:.92;}
+  button:active{transform:scale(.97);}
+  button:disabled{opacity:.5;cursor:default;}
+
+  .status{color:var(--muted);font-size:14px;min-height:20px;margin-bottom:20px;}
+  .status.error{color:#e8734d;}
+
+  .result{
+    display:none;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    background:var(--ink-2);
+  }
+  .result.show{display:block;animation:rise .35s ease;}
+  @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .meta{display:flex;gap:14px;margin-bottom:18px;}
+  .meta img{width:104px;height:64px;object-fit:cover;border-radius:8px;background:var(--line);flex-shrink:0;}
+  .meta .info{overflow:hidden;}
+  .meta .title{font-size:15px;font-weight:600;margin:0 0 4px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;}
+  .meta .uploader{color:var(--muted);font-size:13px;margin:0;}
+
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .opt{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:13px 16px;
+    text-decoration:none;
+    color:var(--paper);
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .opt:hover{border-color:var(--amber);background:#1c1710;}
+  .opt.audio-opt:hover{border-color:var(--teal);background:#0f1d1a;}
+  .opt .label{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;}
+  .opt .arrow{color:var(--muted);font-size:13px;}
+
+  footer{margin-top:auto;padding:24px;color:#4b5162;font-size:12px;text-align:center;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">Universal media ayiruvchi</div>
+    <h1>Bir link.<br>Ikki <span>chiqish</span>.</h1>
+    <p class="sub">Havolani joylashtiring — tizim uni video oqimi va audio oqimiga ajratib, ikkisini alohida yuklab olish imkonini beradi. Minglab manbalar bilan ishlaydi.</p>
+
+    <div class="split">
+      <span class="node"><span class="dot video"></span> Video</span>
+      &nbsp;&nbsp;
+      <span class="node"><span class="dot audio"></span> Audio</span>
+    </div>
+
+    <form id="form">
+      <input type="text" id="url" placeholder="https://... havolani shu yerga joylashtiring" autocomplete="off">
+      <button type="submit" id="submitBtn">Tahlil qil</button>
+    </form>
+
+    <div class="status" id="status"></div>
+
+    <div class="result" id="result">
+      <div class="meta">
+        <img id="thumb" src="" alt="">
+        <div class="info">
+          <p class="title" id="title"></p>
+          <p class="uploader" id="uploader"></p>
+        </div>
+      </div>
+      <div class="options" id="options"></div>
+    </div>
+  </div>
+
+  <footer>Faqat shaxsiy foydalanish uchun. Mualliflik huquqi himoyalangan kontentni tarqatmang.</footer>
+
+<script>
+const form = document.getElementById('form');
+const urlInput = document.getElementById('url');
+const statusEl = document.getElementById('status');
+const result = document.getElementById('result');
+const submitBtn = document.getElementById('submitBtn');
+let currentUrl = '';
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const url = urlInput.value.trim();
+  if (!url) return;
+  currentUrl = url;
+
+  statusEl.textContent = 'Tahlil qilinmoqda...';
+  statusEl.className = 'status';
+  result.classList.remove('show');
+  submitBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/info', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      statusEl.textContent = data.error || 'Xatolik yuz berdi.';
+      statusEl.className = 'status error';
+      return;
+    }
+
+    document.getElementById('thumb').src = data.thumbnail || '';
+    document.getElementById('title').textContent = data.title || 'Nomsiz';
+    document.getElementById('uploader').textContent = data.uploader || '';
+
+    const optionsEl = document.getElementById('options');
+    optionsEl.innerHTML = '';
+    (data.options || []).forEach(opt => {
+      const a = document.createElement('a');
+      a.className = 'opt' + (opt.kind === 'audio' ? ' audio-opt' : '');
+      a.href = `/api/download?url=${encodeURIComponent(currentUrl)}&kind=${opt.kind}`;
+      a.innerHTML = `<span class="label"><span class="dot ${opt.kind}"></span> ${opt.label}</span><span class="arrow">yuklab olish &#8594;</span>`;
+      optionsEl.appendChild(a);
+    });
+
+    statusEl.textContent = '';
+    result.classList.add('show');
+  } catch (err) {
+    statusEl.textContent = 'Server bilan bog\u2018lanib bo\u2018lmadi.';
+    statusEl.className = 'status error';
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
