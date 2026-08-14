@@ -1,20 +1,38 @@
 const express = require('express');
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Which command launches yt-dlp on this machine.
-// On Windows, running it as a Python module ("py -m yt_dlp") avoids PATH problems.
 const YTDLP_CMD = process.platform === 'win32' ? 'py' : 'yt-dlp';
 const ytdlpArgs = (args) => (process.platform === 'win32' ? ['-m', 'yt_dlp', ...args] : args);
+
+// Cookies faylini aniqlash (cookies.txt yoki www.youtube.com_cookies.txt)
+function getCookiePath() {
+  const defaultCookie = path.join(__dirname, 'cookies.txt');
+  const ytCookie = path.join(__dirname, 'www.youtube.com_cookies.txt');
+
+  if (fs.existsSync(defaultCookie)) return defaultCookie;
+  if (fs.existsSync(ytCookie)) return ytCookie;
+  return null;
+}
 
 // Helper: run yt-dlp and collect stdout as a string
 function runYtDlp(args) {
   return new Promise((resolve, reject) => {
-    const proc = spawn(YTDLP_CMD, ytdlpArgs(args));
+    const cookiePath = getCookiePath();
+    const extraArgs = [];
+
+    if (cookiePath) {
+      extraArgs.push('--cookies', cookiePath);
+    }
+
+    const finalArgs = [...extraArgs, ...args];
+    const proc = spawn(YTDLP_CMD, ytdlpArgs(finalArgs));
+
     let out = '';
     let err = '';
     proc.stdout.on('data', (d) => (out += d));
@@ -27,7 +45,6 @@ function runYtDlp(args) {
 }
 
 // POST /api/info  { url }
-// Returns title, thumbnail, duration, and a curated list of downloadable formats
 app.post('/api/info', async (req, res) => {
   const { url } = req.body;
   if (!url || typeof url !== 'string') {
@@ -35,10 +52,14 @@ app.post('/api/info', async (req, res) => {
   }
 
   try {
-    const raw = await runYtDlp(['-j', '--no-playlist', url]);
+    const raw = await runYtDlp([
+      '-j',
+      '--no-playlist',
+      '--extractor-args', 'youtube:player_client=mweb,ios',
+      url
+    ]);
     const data = JSON.parse(raw.trim().split('\n')[0]);
 
-    // Curate formats: best video+audio (mp4) and a best audio-only (mp3-able) option
     const formats = (data.formats || []).filter(
       (f) => f.vcodec !== 'none' || f.acodec !== 'none'
     );
@@ -66,20 +87,31 @@ app.post('/api/info', async (req, res) => {
       ].filter(Boolean),
     });
   } catch (e) {
-    res.status(422).json({ error: 'Link tahlil qilinmadi. Havolani tekshirib qaytadan urinib ko\u2018ring.' });
+    console.error('yt-dlp error:', e.message);
+    res.status(422).json({ error: 'Link tahlil qilinmadi. Havolani tekshirib qaytadan urinib ko‘ring.' });
   }
 });
 
 // GET /api/download?url=...&kind=video|audio
-// Streams the media directly to the client as a file download
 app.get('/api/download', (req, res) => {
   const { url, kind } = req.query;
   if (!url) return res.status(400).send('Link kiritilmagan.');
 
   const isAudio = kind === 'audio';
-  const args = isAudio
+  const cookiePath = getCookiePath();
+  const baseArgs = [];
+
+  if (cookiePath) {
+    baseArgs.push('--cookies', cookiePath);
+  }
+
+  baseArgs.push('--extractor-args', 'youtube:player_client=mweb,ios');
+
+  const mediaArgs = isAudio
     ? ['-f', 'bestaudio', '--extract-audio', '--audio-format', 'mp3', '-o', '-', url]
     : ['-f', 'bv*+ba/b', '--merge-output-format', 'mp4', '-o', '-', url];
+
+  const args = [...baseArgs, ...mediaArgs];
 
   res.setHeader(
     'Content-Disposition',
@@ -89,7 +121,7 @@ app.get('/api/download', (req, res) => {
 
   const proc = spawn(YTDLP_CMD, ytdlpArgs(args));
   proc.stdout.pipe(res);
-  proc.stderr.on('data', () => {}); // swallow progress logs
+  proc.stderr.on('data', () => {});
   proc.on('error', () => res.end());
   req.on('close', () => proc.kill());
 });
