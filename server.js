@@ -128,3 +128,13 @@ app.get('/api/download', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
+// ==========================================
+// TELEGRAM BOTNI SHU YERDA ISHGA TUSHIRAMIZ:
+// ==========================================
+try {
+  require('./bot.js');
+  console.log('Telegram bot muvaffaqiyatli ishga tushirildi.');
+} catch (err) {
+  console.error('bot.js yuklashda xatolik yuz berdi:', err.message);
+}
