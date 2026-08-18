@@ -11,7 +11,7 @@ const http = require('http');
 
 // ====== SETTINGS ======
 // Paste the token you got from @BotFather here, between the quotes.
-const BOT_TOKEN = 'PUT_YOUR_TOKEN_HERE';
+const BOT_TOKEN = '8812849340:AAHHmoHMw3Gysa4r0jl0L4uZqP0OFTOd4qw';
 // If you have a cookies.txt (for YouTube), put its filename here. Leave '' if not needed.
 const COOKIES_FILE = fs.existsSync(path.join(__dirname, 'www.youtube.com_cookies.txt'))
   ? 'www.youtube.com_cookies.txt'
